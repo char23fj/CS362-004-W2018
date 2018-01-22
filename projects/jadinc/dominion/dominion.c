@@ -1191,7 +1191,8 @@ int smithyAction(struct gameState *state, int handPos)
 {
     int currentPlayer = whoseTurn(state);
 
-    for (int i = 0; i < 3; i++)
+    int i;
+    for (i = 0; i < 3; i++)
     {
         drawCard(currentPlayer, state);
         //discard card from hand
@@ -1205,6 +1206,7 @@ int tributeAction(struct gameState *state)
 {
     int currentPlayer = whoseTurn(state);
     int nextPlayer = currentPlayer + 1;
+    int i;
     if (nextPlayer >= (state->numPlayers - 1)) {    //> to >=
         nextPlayer = 0;
     }
@@ -1229,7 +1231,7 @@ int tributeAction(struct gameState *state)
 
     else {
         if (state->deckCount[nextPlayer] == 0) {
-            for (int i = 0; i < state->discardCount[nextPlayer]; i++) {
+            for (i = 0; i < state->discardCount[nextPlayer]; i++) {
                 state->deck[nextPlayer][i] = state->discard[nextPlayer][i];//Move to deck
                 state->deckCount[nextPlayer]++;
                 state->discard[nextPlayer][i] = -1;
@@ -1252,7 +1254,7 @@ int tributeAction(struct gameState *state)
         tributeRevealedCards[1] = -1;
     }
 
-    for (int i = 0; i <= 2; i++) {
+    for (i = 0; i <= 2; i++) {
         if (tributeRevealedCards[i] == copper || tributeRevealedCards[i] == silver || tributeRevealedCards[i] == gold) {//Treasure cards
             state->coins += 2;
         }
@@ -1336,11 +1338,13 @@ int cutpurseAction(struct gameState *state, int handPos)
     int currentPlayer = whoseTurn(state);
 
     updateCoins(currentPlayer, state, 2);
-    for (int i = 0; i < state->numPlayers; i++)
+    int i, j, k;
+
+    for (i = 0; i < state->numPlayers; i++)
     {
         if (i != currentPlayer)
         {
-            for (int j = 0; j < state->handCount[i]; j++)
+            for (j = 0; j < state->handCount[i]; j++)
             {
                 if (state->hand[j][i] == copper)
                 {
@@ -1349,7 +1353,7 @@ int cutpurseAction(struct gameState *state, int handPos)
                 }
                 if (j == state->handCount[i])
                 {
-                    for (int k = 0; k < state->handCount[i]; k++)
+                    for (k = 0; k < state->handCount[i]; k++)
                     {
                         if (DEBUG)
                             printf("Player %d reveals card number %d\n", i, state->hand[i][k]);
