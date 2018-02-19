@@ -42,7 +42,7 @@ unittest3: unittest3.c dominion.o rngs.o
 unittest4: unittest4.c dominion.o rngs.o
 	gcc -o unittest4 -g  unittest4.c dominion.o rngs.o $(CFLAGS)
 
-alltests:
+unittests:
 	make cardtest1
 	./cardtest1 > unittestresults.out
 	make cardtest2
@@ -60,6 +60,28 @@ alltests:
 	make unittest4
 	./unittest4 >> unittestresults.out
 	gcov -abcfu dominion.c >> unittestresults.out
+	
+randomtestcard1: randomtestcard1.c dominion.o rngs.o
+	gcc -o randomtestcard1 -g  randomtestcard1.c dominion.o rngs.o $(CFLAGS)
+
+randomtestcard2: randomtestcard2.c dominion.o rngs.o
+	gcc -o randomtestcard2 -g  randomtestcard2.c dominion.o rngs.o $(CFLAGS)
+
+randomtestadventurer: randomtestadventurer.c dominion.o rngs.o
+	gcc -o randomtestadventurer -g  randomtestadventurer.c dominion.o rngs.o $(CFLAGS)
+
+randomtests:
+	make randomtestcard1
+	./randomtestcard1 > randomtestcard1.out
+	gcov -abcfu dominion.c >> randomtestcard1.out
+
+	make randomtestcard2
+	./randomtestcard2 > randomtestcard2.out
+	gcov -abcfu dominion.c >> randomtestcard2.out
+
+	make randomtestadventurer
+	./randomtestadventurer > randomtestadventurer.out
+	gcov -abcfu dominion.c >> randomtestadventurer.out
 
 testAll: dominion.o testSuite.c
 	gcc -o testSuite testSuite.c -g  dominion.o rngs.o $(CFLAGS)
