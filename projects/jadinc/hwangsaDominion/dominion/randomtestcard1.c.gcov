@@ -1,0 +1,171 @@
+        -:    0:Source:randomtestcard1.c
+        -:    0:Graph:randomtestcard1.gcno
+        -:    0:Data:randomtestcard1.gcda
+        -:    0:Runs:1
+        -:    0:Programs:1
+        -:    1:#include "dominion.h"
+        -:    2:#include "dominion_helpers.h"
+        -:    3:#include "rngs.h"
+        -:    4:#include <string.h>
+        -:    5:#include <stdio.h>
+        -:    6:#include <assert.h>
+        -:    7:#include <stdlib.h>
+        -:    8:#include <time.h>
+        -:    9:#include <math.h>
+        -:   10:
+        -:   11:// fail counters
+        -:   12:int failc_effect = 0;
+        -:   13:int failc_draw = 0;
+        -:   14:int failc_discard = 0;
+        -:   15:int failc_p1_deckhandcount = 0;
+        -:   16:int failc_buys = 0;
+        -:   17:int failc_p2_deckhandcount = 0;
+        -:   18:
+        -:   19:// function tests council room card
+    10000:   20:void test_councilroom(int x, struct gameState *post) {
+        -:   21:	int i, fx, d1, d2, d3, d4, draw, discard;
+    10000:   22:	int bonus = 0;
+        -:   23:
+        -:   24:	// manually act on function's actions
+        -:   25:	struct gameState pre;
+        -:   26:
+        -:   27:	// copy game state to pre
+    10000:   28:	memcpy(&pre, post, sizeof(struct gameState));
+        -:   29:
+        -:   30:	// call card effect function with council room card
+    10000:   31:	fx = cardEffect(council_room, 0, 0, 0, post, 0, &bonus);
+        -:   32:
+        -:   33:	// call drawCard 4x
+    10000:   34:	d1 = drawCard(x, &pre);
+    10000:   35:	d2 = drawCard(x, &pre);
+    10000:   36:	d3 = drawCard(x, &pre);
+    10000:   37:	d4 = drawCard(x, &pre);
+        -:   38:
+    10000:   39:	pre.numBuys++;
+        -:   40:
+        -:   41:	// each player draws a card
+    40009:   42:	for (i = 0; i < pre.numPlayers; i++) {
+    30009:   43:		if (i != x) {
+    20009:   44:			draw = drawCard(i, &pre);
+        -:   45:
+        -:   46:			// check if draw failed
+    20009:   47:			if (draw == -1 && pre.deckCount[i] != 0) {
+    #####:   48:				failc_draw++;
+        -:   49:			}
+        -:   50:		}
+        -:   51:	}
+        -:   52:
+        -:   53:	// call discardCard
+    10000:   54:	discard = discardCard(0, x, &pre, 0);
+        -:   55:
+        -:   56:	// get hand and deck counts
+    10000:   57:	int post_hand = post->handCount[x];
+    10000:   58:	int post_deck = post->deckCount[x];
+    10000:   59:	int pre_hand = pre.handCount[x];
+    10000:   60:	int pre_deck = pre.deckCount[x];
+        -:   61:
+        -:   62:	// check buys
+    10000:   63:	if (pre.numBuys != post->numBuys) {
+    #####:   64:		failc_buys++;
+        -:   65:	}
+        -:   66:
+        -:   67:	// check draws
+    10000:   68:	if (d1 == -1 && pre.deckCount[x] != 0) {
+    #####:   69:		failc_draw++;
+        -:   70:	}
+    10000:   71:	if (d2 == -1 && pre.deckCount[x] != 0) {
+    #####:   72:		failc_draw++;
+        -:   73:	}
+    10000:   74:	if (d3 == -1 && pre.deckCount[x] != 0) {
+    #####:   75:		failc_draw++;
+        -:   76:	}
+    10000:   77:	if (d4 == -1 && pre.deckCount[x] != 0) {
+    #####:   78:		failc_draw++;
+        -:   79:	}
+        -:   80:
+        -:   81:	// check card effect and discard
+    10000:   82:	if (!(fx == 0 && discard == 0)) {
+    #####:   83:		if (fx) {
+    #####:   84:			failc_effect++;
+        -:   85:		}
+    #####:   86:		if (discard) {
+    #####:   87:			failc_discard++;
+        -:   88:		}
+        -:   89:	}
+        -:   90:
+        -:   91:	// check hand and deck count for player 1
+    10000:   92:	if (!(post_hand == pre_hand && post_deck == pre_deck)) {
+     9999:   93:		failc_p1_deckhandcount++;
+        -:   94:	}
+        -:   95:
+        -:   96:	// check hand and deck count for player 2
+    40009:   97:	for (i = 0; i < pre.numPlayers; i++) {
+    30009:   98:		if (i != x) {
+    20009:   99:			if (!(post->handCount[i] == pre.handCount[i] && post->deckCount[i] == pre.deckCount[i])) {
+    #####:  100:				failc_p2_deckhandcount++;
+        -:  101:			}
+        -:  102:		}
+        -:  103:	}
+    10000:  104:}
+        -:  105:
+        1:  106:int main() {
+        1:  107:	printf("Random Test\n");
+        1:  108:	printf("randomcardtest1.c\n");
+        1:  109:	printf("council_roomCard()\n");
+        -:  110:
+        1:  111:	int loop = 10000;
+        -:  112:	int i, j, player, deck_count, hand_count, discard_count;
+        1:  113:	int num_players[] = {2, 3, 4};
+        -:  114:	struct gameState test;
+        1:  115:	srand(time(NULL));
+        -:  116:
+        -:  117:	// randomly initialize game state
+    10001:  118:	for (j = 0; j < loop; j++) {
+263010000:  119:		for (i = 0; i < sizeof(struct gameState); i++) {
+263000000:  120:			((char*)&test)[i] = floor(Random() * 256);
+        -:  121:		}
+        -:  122:
+        -:  123:		// randomly select vals
+    10000:  124:		test.numPlayers = num_players[rand() % 3];
+    10000:  125:		test.numBuys = 1;
+    10000:  126:		test.playedCardCount = floor(Random() * (MAX_DECK - 1));
+    10000:  127:		player = test.numPlayers - 2;
+    10000:  128:		deck_count = floor(Random() * MAX_DECK);
+    10000:  129:		hand_count = floor(Random() * MAX_HAND);
+    10000:  130:		discard_count = floor(Random() * MAX_DECK);
+    10000:  131:		test.whoseTurn = player;
+        -:  132:
+        -:  133:		// set hand/deck vals
+    40009:  134:		for (i = 0; i < test.numPlayers; i++) {
+    30009:  135:			test.deckCount[i] = deck_count;
+    30009:  136:			test.handCount[i] = hand_count;
+    30009:  137:			test.discardCount[i] = discard_count;
+        -:  138:		}
+        -:  139:
+        -:  140:		// call test function
+    10000:  141:		test_councilroom(player, &test);
+        -:  142:	}
+        -:  143:
+        1:  144:	int failc_total = failc_effect + failc_draw + failc_discard + failc_p1_deckhandcount + failc_buys;
+        -:  145:
+        1:  146:	printf("\nTest Results\n");
+        1:  147:	printf("Passed Tests: %d\n", loop - failc_total);
+        1:  148:	printf("Failed Tests: %d\n", failc_total);
+        -:  149:
+        1:  150:	if (failc_total == 0) {
+    #####:  151:		printf("\nRandom Test Successfully Passed\n\n");
+        -:  152:	}
+        -:  153:	else {
+        1:  154:		printf("\nRandom Test Failed\n");
+        1:  155:		printf("cardEffect() failed: %d\n", failc_effect);
+        1:  156:		printf("drawCard() failed: %d\n", failc_draw);
+        1:  157:		printf("discardCard() failed: %d\n", failc_discard);
+        1:  158:		printf("Player Hand/Deck count mismatch: %d\n", failc_p1_deckhandcount);
+        1:  159:		printf("Other Player Hand/Deck count  mismatch: %d\n", failc_p2_deckhandcount);
+        1:  160:		printf("numBuys count mismatch: %d\n", failc_buys);
+        -:  161:	}
+        -:  162:
+        1:  163:	printf("Coverage\n");
+        -:  164:
+        1:  165:	return 0;
+        -:  166:}
