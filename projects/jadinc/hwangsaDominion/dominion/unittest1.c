@@ -1,131 +1,68 @@
-<<<<<<< HEAD
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-
-int failure_count = 0;
-
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Faile\n");
-		failure_count++;
-	}
-}
-
-int main() {
-	int num_players = 2;
-	
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
-
-	printf("Testing: isGameOver()\n");
-
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
-
-	state.supplyCount[province] = 0;
-
-	printf("\nProvince cards empty\n");
-	assertTrue(isGameOver(&state),1);
-
-	state.supplyCount[province] = 1;
-
-	state.supplyCount[0] = 0;
-	state.supplyCount[1] = 0;
-	state.supplyCount[2] = 0;
-
-	printf("\n3 supply piles empty\n");
-	assertTrue(isGameOver(&state),1);
-
-	state.supplyCount[0] = 1;
-	state.supplyCount[1] = 1;
-	state.supplyCount[2] = 1;
-
-	printf("\nProvince cards not empty\n");
-	printf("\n3 supply piles not empty\n");
-	assertTrue(isGameOver(&state),0);
-
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
-}
-=======
-#include "dominion.h"
-#include "dominion_helpers.h"
 #include "rngs.h"
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
-int failure_count = 0;
+void testResult(int given, int desired)
+{
+    if (given == 1 && desired == 1)
+    {
+        printf("Pass.  Game over.\n");
+    }
+    else if (desired == 1)
+    {
+        printf("Fail.  Returned false result in a game-ending case.\n");
+    }
 
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Faile\n");
-		failure_count++;
-	}
+    if (given == 0 && desired == 0)
+    {
+        printf("Pass.  Game continues.\n");
+    }
+    else if (desired == 0)
+    {
+        printf("Fail.  Returned true without game-ending condition.\n");
+    }
 }
 
-int main() {
-	int num_players = 2;
-	
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
+int main(int argc, char** argv) {
+  struct gameState G;
+  int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy};
 
-	printf("Testing: isGameOver()\n");
+  initializeGame(2, k, 235, &G);
 
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
+  printf("\n-----Testing the isGameOver function implementation.-----\n");
 
-	state.supplyCount[province] = 0;
+  //Precondition: province supply pile empty
+  G.supplyCount[province] = 0;
 
-	printf("\nProvince cards empty\n");
-	assertTrue(isGameOver(&state),1);
+  int result = isGameOver(&G);
+  printf("\nCase 1:  Province supply is empty.  Result:\n");
+  testResult(result, 1);
 
-	state.supplyCount[province] = 1;
+  //Precondition: province supply pile not empty, 3 others empty
+  G.supplyCount[province] = 1;
+  G.supplyCount[smithy] = 0;
+  G.supplyCount[estate] = 0;
+  G.supplyCount[gold] = 0;
 
-	state.supplyCount[0] = 0;
-	state.supplyCount[1] = 0;
-	state.supplyCount[2] = 0;
+  result = isGameOver(&G);
+  printf("\nCase 2:  3 supply piles empty, province at 1.  Result:\n");
+  testResult(result, 1);
 
-	printf("\n3 supply piles empty\n");
-	assertTrue(isGameOver(&state),1);
+  //Precondition: province supply pile empty
+  G.supplyCount[province] = 1;
+  G.supplyCount[smithy] = 1;
+  G.supplyCount[estate] = 1;
+  G.supplyCount[gold] = 1;
 
-	state.supplyCount[0] = 1;
-	state.supplyCount[1] = 1;
-	state.supplyCount[2] = 1;
+  result = isGameOver(&G);
+  printf("\nCase 1:  No empty supply piles.  Result:\n");
+  testResult(result, 0);
 
-	printf("\nProvince cards not empty\n");
-	printf("\n3 supply piles not empty\n");
-	assertTrue(isGameOver(&state),0);
+  return 0;
 
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
 }
->>>>>>> 969d8ce8573046a341b0c60fe0fd421a65085b95

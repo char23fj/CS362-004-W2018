@@ -1,135 +1,120 @@
-<<<<<<< HEAD
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-
-int failure_count = 0;
-
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
-}
-
-int main() {
-	int num_players = 2;
-
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
-
-	printf("Testing: gainCard()\n");
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
-
-	printf("\nGold supply pile is empty\n");
-	state.supplyCount[gold] = 0;
-	assertTrue(gainCard(gold,&state,0,0),-1);
-	state.supplyCount[gold] = 30;
-
-	printf("\nAdd card to deck\n");
-	int deckCount = state.deckCount[0];
-	gainCard(gold,&state,1,0);
-	assertTrue(deckCount+1, state.deckCount[0]);
-
-	printf("\nAdd card to hand\n");
-	int handCount = state.handCount[0];
-	gainCard(gold,&state,2,0);
-	assertTrue(handCount+1, state.handCount[0]);
-
-	printf("\nAdd card to discarded pile\n");
-	int discardCount = state.discardCount[0];
-	gainCard(gold,&state,0,0);
-	assertTrue(discardCount+1, state.discardCount[0]);
-
-	printf("\nDecrease gold supply\n");
-	int goldSupply = state.supplyCount[gold];
-	gainCard(gold,&state,0,0);
-	assertTrue(goldSupply-1,state.supplyCount[gold]);
-
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
-}
-=======
-#include "dominion.h"
-#include "dominion_helpers.h"
 #include "rngs.h"
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
-int failure_count = 0;
+void testDiff(int after, int before, int extra)
+{
+    if (after == before - extra)
+    {
+        printf("Passed.\n");
+    }
 
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
+    else if (extra == 0)
+    {
+        printf("Failed.  No cards should have been removed.\n");
+    }
+
+    else
+    {
+        printf("Failed.  %d card(s) should have been removed.\n", extra);
+    }
 }
 
-int main() {
-	int num_players = 2;
+int main(int argc, char** argv) {
+  struct gameState G;
+  int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy};
 
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
+  initializeGame(2, k, 235, &G);
 
-	printf("Testing: gainCard()\n");
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
+  //Precondition: no gold in supply pile
+  G.supplyCount[gold] = 0;
 
-	printf("\nGold supply pile is empty\n");
-	state.supplyCount[gold] = 0;
-	assertTrue(gainCard(gold,&state,0,0),-1);
-	state.supplyCount[gold] = 30;
+  int currentPlayer = G.whoseTurn;
 
-	printf("\nAdd card to deck\n");
-	int deckCount = state.deckCount[0];
-	gainCard(gold,&state,1,0);
-	assertTrue(deckCount+1, state.deckCount[0]);
+  printf("\n-----Testing the discardCard function implementation.-----\n");
 
-	printf("\nAdd card to hand\n");
-	int handCount = state.handCount[0];
-	gainCard(gold,&state,2,0);
-	assertTrue(handCount+1, state.handCount[0]);
+  int hcount = G.handCount[currentPlayer],
+      disc = G.discardCount[currentPlayer],
+      played = G.playedCardCount,
+      last = G.hand[currentPlayer][hcount - 1];
 
-	printf("\nAdd card to discarded pile\n");
-	int discardCount = state.discardCount[0];
-	gainCard(gold,&state,0,0);
-	assertTrue(discardCount+1, state.discardCount[0]);
+  printf("\nBefore calling discardCard:\n");
+  printf("Handcount: %d\n", hcount);
+  printf("Discard count: %d\n", disc);
+  printf("Played card count: %d\n", played);
 
-	printf("\nDecrease gold supply\n");
-	int goldSupply = state.supplyCount[gold];
-	gainCard(gold,&state,0,0);
-	assertTrue(goldSupply-1,state.supplyCount[gold]);
+  printf("\nCalling discardCard at index 0, with 0 for played cards flag.\n");
 
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
+  printf("\nVerifying card removed from hand...\n");
+  discardCard(0, currentPlayer, &G, 0);
+  testDiff(G.handCount[currentPlayer], hcount, 1);
 
-	return 0;
+  printf("\nVerifying 1 card has been added to discard pile...\n");
+  testDiff(G.discardCount[currentPlayer], disc, 1);
+
+  printf("\nVerifying 1 card has been added to playedCards...\n");
+  if (G.playedCardCount == played + 1)
+  {
+      printf("Passed.\n");
+  }
+  else
+  {
+      printf("Failed.  1 card should have been added to played pile.\n");
+  }
+
+  printf("\nVerifying last card has been moved to zero index...\n");
+  if (G.hand[currentPlayer][0] == last)
+  {
+      printf("Passed.\n");
+  }
+  else
+  {
+      printf("Failed.  0 index card is not the last card from before discarding.\n");
+  }
+  played = G.playedCardCount;
+  hcount = G.handCount[currentPlayer];
+  discardCard(G.hand[currentPlayer][hcount-1], currentPlayer, &G, 1);
+
+  printf("\nCalling discardCard at highest index, with 1 for played cards flag.\n");
+  printf("\nVerifying card has not been added to playedCards...\n");
+  if (G.playedCardCount == played)
+  {
+      printf("Passed.\n");
+  }
+  else
+  {
+      printf("Failed.  No cards should have been added to played pile.\n");
+  }
+
+  hcount = G.handCount[currentPlayer];
+  printf("\nRemoving all cards from player's hand.\n");
+  int removed = 0;
+  while (G.handCount[currentPlayer] > 0)
+  {
+      discardCard(0, currentPlayer, &G, 1);
+      removed++;
+  }
+
+  printf("Hand count: %d.\n", G.handCount[currentPlayer]);
+  printf("Verifying number of cards removed equals number of cards before removal..\n");
+  testDiff(0, removed, hcount);
+  printf("Attempting to remove an additional card with empty hand...\n");
+  discardCard(0, currentPlayer, &G, 1);
+  printf("Hand count: %d.\n", G.handCount[currentPlayer]);
+  if (G.handCount[currentPlayer] < 0)
+  {
+      printf("Action succeeded, indicating possible design flaw.\n");
+  }
+  else
+  {
+      printf("Action failed; program prevents negative hand count values.\n");
+  }
+
+  return 0;
+
 }
->>>>>>> 969d8ce8573046a341b0c60fe0fd421a65085b95

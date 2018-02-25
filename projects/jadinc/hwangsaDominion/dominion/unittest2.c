@@ -1,133 +1,83 @@
-<<<<<<< HEAD
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-
-int failure_count = 0;
-
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
-}
-
-int main() {
-	int num_players = 2;
-	int player = 0;
-
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
-
-	printf("Testing: shuffle()\n");
-
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
-
-	state.deckCount[player] = 0;
-	printf("\nDeck count = 0\n");
-	assertTrue(shuffle(player,&state),-1);
-
-	printf("\nDeck count = 10 before and after shuffling\n");
-	state.deckCount[player] = 10;
-	shuffle(player, &state);
-	assertTrue(state.deckCount[player],10);
-
-	printf("\nCards are shuffled\n");
-
-	int pre_shuffle = state.deck[player][0];
-	shuffle(player,&state);
-	int post_shuffle = state.deck[player][0];
-
-	if(pre_shuffle != post_shuffle) {
-		assertTrue(1,1);
-	}
-	else {
-		assertTrue(0,1);
-	}
-
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
-}
-=======
-#include "dominion.h"
-#include "dominion_helpers.h"
 #include "rngs.h"
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
+#include <stdlib.h>
 
-int failure_count = 0;
+void testGain(int after, int before, int extra)
+{
+    if (after == before + extra)
+    {
+        printf("Passed.\n");
+    }
 
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
+    else if (extra == 0)
+    {
+        printf("Failed.  No cards should have been added.\n");
+    }
+
+    else
+    {
+        printf("Failed.  %d card(s) should have been added.\n", extra);
+    }
 }
 
-int main() {
-	int num_players = 2;
-	int player = 0;
+int main(int argc, char** argv) {
+  struct gameState G;
+  int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy};
 
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
+  initializeGame(2, k, 235, &G);
 
-	printf("Testing: shuffle()\n");
+  //Precondition: no gold in supply pile
+  G.supplyCount[gold] = 0;
 
-	memset(&state,23,sizeof(struct gameState));
-	initializeGame(num_players, k, seed, &state);
+  int currentPlayer = G.whoseTurn;
 
-	state.deckCount[player] = 0;
-	printf("\nDeck count = 0\n");
-	assertTrue(shuffle(player,&state),-1);
+  printf("\n-----Testing the gainCard function implementation.-----\n");
 
-	printf("\nDeck count = 10 before and after shuffling\n");
-	state.deckCount[player] = 10;
-	shuffle(player, &state);
-	assertTrue(state.deckCount[player],10);
+  int hcount = G.handCount[currentPlayer],
+      dcount = G.deckCount[currentPlayer],
+      disc = G.discardCount[currentPlayer];
 
-	printf("\nCards are shuffled\n");
+  printf("\nBefore calling gainCard:\n");
+  printf("Handcount: %d\n", G.handCount[currentPlayer]);
+  printf("Deckcount: %d\n", G.deckCount[currentPlayer]);
+  printf("Discard count: %d\n", G.deckCount[currentPlayer]);
 
-	int pre_shuffle = state.deck[player][0];
-	shuffle(player,&state);
-	int post_shuffle = state.deck[player][0];
+  printf("\nNow calling gainCard (gold) once each for hand/deck/discard ");
+  printf("with no gold \nin supply pile...\n");
 
-	if(pre_shuffle != post_shuffle) {
-		assertTrue(1,1);
-	}
-	else {
-		assertTrue(0,1);
-	}
+  printf("\nVerifying no cards have been added to hand...\n");
+  gainCard(gold, &G, 2, currentPlayer);
+  testGain(G.handCount[currentPlayer], hcount, 0);
 
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
+  printf("\nVerifying no cards have been added to deck...\n");
+  gainCard(gold, &G, 1, currentPlayer);
+  testGain(G.deckCount[currentPlayer], dcount, 0);
 
-	return 0;
+  printf("\nVerifying no cards have been discarded...\n");
+  gainCard(gold, &G, 0, currentPlayer);
+  testGain(G.discardCount[currentPlayer], disc, 0);
+
+  printf("\nIncreasing gold supply to 3 and calling once each ");
+  printf("for hand/deck/discard...\n");
+  G.supplyCount[gold] = 3;
+
+  printf("\nVerifying 1 card has been added to hand...\n");
+  gainCard(gold, &G, 2, currentPlayer);
+  testGain(G.handCount[currentPlayer], hcount, 1);
+
+  printf("\nVerifying 1 card has been added to deck...\n");
+  gainCard(gold, &G, 1, currentPlayer);
+  testGain(G.deckCount[currentPlayer], dcount, 1);
+
+  printf("\nVerifying 1 card has been discarded...\n");
+  gainCard(gold, &G, 0, currentPlayer);
+  testGain(G.discardCount[currentPlayer], disc, 1);
+
+  return 0;
+
 }
->>>>>>> 969d8ce8573046a341b0c60fe0fd421a65085b95

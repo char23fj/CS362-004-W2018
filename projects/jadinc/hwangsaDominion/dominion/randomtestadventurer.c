@@ -1,178 +1,123 @@
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "rngs.h"
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
 
-// fail counters
-int failc_effect = 0;
-int failc_shuffle = 0;
-int failc_draw = 0;
-int failc_deckhandcount = 0;
-int failc_treasure = 0;
+#define MAX_FAILS 10
+#define MAX_HAND 15
+#define MAX_DECK 50
+#define SAMPLE_SIZE 50
 
-// this function will test the adventurer card
-void testAdventurer(int x, struct gameState *post) {
-	int pre_treasure = 0;
-	int post_treasure = 0;
-	int temp_hand[MAX_HAND];
-	int draw_treasure = 0;
+int testCardEffect(struct gameState* G);
 
-	// manually act on function's actions
-	struct gameState pre;
-	int card, draw_card;
-	int bonus = 0;
-	int count = 0;
-	int i, fx, shuffle_c, draw;
+int main(int argc, char** argv) {
+  printf("\n-----Testing the adventurer card implementation.-----\n");
 
-	// copy to pre
-	memcpy(&pre, post, sizeof(struct gameState));
+  struct gameState G;
+  int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy};
 
-	// call effect function with adventurer card
-	fx = cardEffect(adventurer, 0, 0, 0, post, 0, &bonus);
+  //initializeGame(2, k, 235, &G);
 
-	// check if effect function failed
-	if (fx) {
-		failc_effect++;
-	}
+  int fails = 0;
 
-	// adventurer card actions
-	while (draw_treasure < 2) {
-		if (pre.deckCount[x] < 1) {
-			// if the deck is empty, shuffle discarded cards and add to deck
-			shuffle_c = shuffle(x, &pre);
-			
-			// check if shuffle failed
-			if (shuffle_c == -1 && pre.deckCount[x] >= 1) {
-				failc_shuffle++;
-			}
-		}
+  int currentPlayer = G.whoseTurn;
 
-		draw = drawCard(x, &pre);
+  int i, j, md, 
+      mh, hc;
+  for (i = 0; i < SAMPLE_SIZE; i++)
+  {
+      md = rand() % MAX_DECK;
 
-		// check if draw failed
-		if (draw == -1 && pre.deckCount[x] != 0) {
-			failc_draw++;
-		}
+      initializeGame(2, k, 235, &G);
 
-		// top card in player's hand is most recently drawn card
-		draw_card = pre.hand[x][pre.handCount[x] - 1];
+      G.deckCount[currentPlayer] = 0;
+      G.handCount[currentPlayer] = 0;
 
-		if (draw_card == copper || draw_card == silver || draw_card == gold) {
-			draw_treasure++;
-		}
-		else {
-			temp_hand[count] = draw_card;
-			pre.handCount[x]--;	// remove top card
-			count++;
-		}
-	}
+      for (j = 0; j < md; j++)
+      {
+          gainCard(rand() % 27, &G, 1, currentPlayer);
+      }
 
-	while (count - 1 >= 0) {
-		pre.discard[x][pre.discardCount[x]++] = temp_hand[count - 1];	// discard cards in play that were drawn
-		count = count - 1;
-	}
+      mh = rand() % MAX_HAND;
+      for (j = 0; j < mh; j++)
+      {
+          if (G.deckCount[currentPlayer] > 0)
+          {
+              drawCard(currentPlayer, &G);
+          }
+      }
 
-	// get num of post_treasure
-	for (i = 0; i < post->handCount[x]; i++) {
-		card = post->hand[x][i];
-		if (card == copper || card == silver || card == gold) {
-			post_treasure++;
-		}
-	}
-	// get num of pre_treasure
-	for (i = 0; i < pre.handCount[x]; i++) {
-		card = pre.hand[x][i];
-		if (card == copper || card == silver || card == gold) {
-			pre_treasure++;
-		}
-	}
+      hc = G.handCount[currentPlayer];
 
-	// check for match
-	if (post_treasure != pre_treasure) {
-		failc_treasure++;
-	}
+      fails += testCardEffect(&G);
 
-	// get deck and hand counts
-	int post_hand = post->handCount[x];
-	int post_deck = post->deckCount[x];
-	int post_discard = post->discardCount[x];
-	int pre_hand = pre.handCount[x];
-	int pre_deck = pre.deckCount[x];
-	int pre_discard = pre.discardCount[x];
+      if (fails >= MAX_FAILS)
+      {
+          printf("\nMaximum failure count reached.  Exiting.\n");
+          break;
+      }
+  }
 
-	// check for match
-	if (!(post_hand == pre_hand && post_deck == pre_deck && post_discard == pre_discard)) {
-		failc_deckhandcount++;
-	}
+  if (fails == 0)
+  {
+      printf("\nTesting completed; no errors found.\n");
+  }
+
 }
 
-int main() {
-	printf("Random Test\n");
-	printf("randomtestadventurer.c\n");
-	printf("adventurerCard()\n\n");
+int testCardEffect(struct gameState* G)
+{
+  int currentPlayer = G->whoseTurn;
+  gainCard(adventurer, G, 2, currentPlayer);
+  int error = 0,
+      hcount = G->handCount[currentPlayer],
+      dcount = G->deckCount[currentPlayer],
+      disc = G->discardCount[currentPlayer];
+  
 
-	int loop = 10000;
-	int treasures[] = {copper, silver, gold};
-	int treasure_count;
-	int i, j, player;
-	struct gameState test;
+  cardEffect(adventurer, 0, 0, 0, G, hcount-1, 0);
 
-	// min 3 cards in deck and hand
-	int min = 3;
-	srand(time(NULL));
+  if (G->handCount[currentPlayer] != hcount + 1)
+  {
+      printf("Error: Hand count should reflect two additions, minus the discarded ");
+      printf("adventurer card.\n");
 
-	// randomly initialize game state
-	for (j = 0; j < loop; j++) {
-		for (i = 0; i < sizeof(struct gameState); i++) {
-			((char*)&test)[i] = floor(Random() * 256);
-		}
-		// randomly select vals
-		player = floor(Random() * MAX_PLAYERS);
-		test.deckCount[player] = floor(Random() * ((MAX_DECK - min) + 1) + min);
-		treasure_count = floor(Random() * ((test.deckCount[player] - min) + 1) + min);
+      error = 1;
+  }
 
-		// min 3 treasure careds in deck
-		for (i = 0; i < treasure_count; i++) {
-			test.deck[player][i] = treasures[rand() % 3];
-		}
-		test.discardCount[player] = 0;
-		test.handCount[player] = floor(Random() * ((MAX_HAND - min) + 1) + min);
-		test.whoseTurn = player;
+  if (G->discardCount[currentPlayer] == disc)
+  {
+      printf("Error: Nothing was added to the discard pile.\n");
+      error = 1;
+  }
 
-		// call test function
-		testAdventurer(player, &test);
-	}
+  if (G->deckCount[currentPlayer] > dcount - 2)
+  {
+      printf("Error: Deck should have been reduced by at least two.\n");
+      error = 1;
+  }
 
-	int failc_total = failc_effect + failc_shuffle + failc_draw + failc_deckhandcount + failc_treasure;
+  if (dcount - G->deckCount[currentPlayer] != disc - G->discardCount[currentPlayer] + 1)
+  {
+      printf("Error:  Discard pile should have increased by 1 more than the deck.\n");
+      error = 1;
+  }
+  int i,
+      top;
 
-	if (loop - failc_total <= 0) {
-		printf("\nTest Results:\n");
-		printf("Passed Tests: %d\n",0);
-		printf("Failed Tests: %d\n",loop);
-	}
-	else {
-		printf("\nTest Results:\n");
-		printf("Passed Tests: %d\n",loop - failc_total);
-		printf("Failed Tests: %d\n", failc_total);
-	}
+  for (i = 1; i < 3; i++)
+  {
+    top = G->hand[currentPlayer][G->handCount[currentPlayer] - i];
+    if (top < copper || top > gold)
+    {
+        printf("Error:  Top two (most recently drawn) cards are not coins.\n");
+        error = 1;
+    }
+  }
 
-	if (failc_total == 0) {
-		printf("\nRandom Test Successfully Passed\n");
-	}
-	else {
-		printf("\nRandom Test Failed\n");
-		printf("cardEffect() failed: %d\n", failc_effect);
-		printf("drawCard() failed: %d\n", failc_draw);
-		printf("shuffle() failed: %d\n", failc_shuffle);
-		printf("Hand/Deck count mismatch: %d\n", failc_deckhandcount);
-		printf("Treasure count mismatch: %d\n", failc_treasure);
-	}
-	printf("Coverage\n");
-
-	return 0;
+  return error;
 }

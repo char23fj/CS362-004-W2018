@@ -1,195 +1,88 @@
-<<<<<<< HEAD
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
-#include <assert.h>
 #include <stdio.h>
-
-int failure_count = 0;
-
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
-}
-
-int main() {
-	int i;
-	int num_players = 2;
-	int player = 0;
-
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
-	int handCount;
-	int bonus = 1;
-
-	int coppers[MAX_HAND];
-	int silvers[MAX_HAND];
-	int golds[MAX_HAND];
-
-	// arrays of treasures
-	for (i = 0; i < MAX_HAND; i++) {
-		coppers[i] = copper;
-		silvers[i] = silver;
-		golds[i] = gold;
-	}
-
-	printf("Testing: updateCoins()");
-
-	// test the function updateCoins() to see how it handles treasures, different bonus and hand count
-	for(handCount = 0; handCount <= 5; handCount = handCount + 5) {
-		printf("\n\nTreasure cards: %d\n", handCount);
-		printf("Bonus: %d\n", bonus);
-
-		memset(&state,23,sizeof(struct gameState));
-		initializeGame(num_players, k, seed, &state);
-		state.handCount[player] = handCount;
-
-		// fill hand with copper
-		memcpy(state.hand[player],coppers,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Copper\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*1+bonus);
-
-		assertTrue(state.coins,handCount*1+bonus);
-
-		// fill hand with silver
-		memcpy(state.hand[player],silvers,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Silver\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*2+bonus);
-
-		assertTrue(state.coins, handCount*2+bonus);
-
-		// fill hand with gold
-		memcpy(state.hand[player],golds,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Gold\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*3+bonus);
-
-		assertTrue(state.coins,handCount*3+bonus);
-
-		bonus = bonus + 2;
-	}
-
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
-}
-=======
-#include "dominion.h"
-#include "dominion_helpers.h"
+#include <assert.h>
 #include "rngs.h"
-#include <string.h>
-#include <assert.h>
-#include <stdio.h>
+#include <stdlib.h>
 
-int failure_count = 0;
+int main(int argc, char** argv) {
+  struct gameState G;
+  int k[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy};
 
-void assertTrue(int a, int b) {
-	if (a == b) {
-		printf("Test: Pass\n");
-	}
-	else {
-		printf("Test: Fail\n");
-		failure_count++;
-	}
+  initializeGame(2, k, 235, &G);
+
+  printf("\n-----Testing the shuffle function implementation.-----\n");
+
+  printf("\nAttempting to shuffle an empty deck ");
+  
+  G.deckCount[1] = 0;
+
+  printf("(deckCount: %d).\n", G.deckCount[1]);
+  printf("Verifying return value of -1...\n");
+  if (shuffle(1, &G) == -1)
+  {
+      printf("Passed.\n");
+  }
+  else
+  {
+      printf("Failed.  Unexpected return value.\n");
+  }
+
+  printf("\nShuffling the other player's deck ");
+  printf("(deckCount: %d).\n", G.deckCount[0]);
+
+  int dcount = G.deckCount[0],
+      hi = dcount - 1,
+      mid = hi / 2;
+
+  int sample1 = G.deck[0][0],
+      sample2 = G.deck[0][mid],
+      sample3 = G.deck[0][hi];
+
+  shuffle(0, &G);
+
+  int same = 1,
+      count = 0;
+
+  //Give several attempts to shuffle and change 3 sample values
+  while (same == 1 && count < 10)
+  {
+      if (sample1 == G.deck[0][0] && sample2 == G.deck[0][mid] && sample3 == G.deck[0][hi])
+      {
+          shuffle(0, &G);
+          count++;
+      }
+      else
+      {
+          same = 0;
+          break;
+      }
+  }
+
+  printf("Verifying deck count has not changed...\n");
+  if (dcount == G.deckCount[0])
+  {
+      printf("Passed.\n");
+  }
+
+  else
+  {
+      printf("Failed.  Deck size has changed.\n");
+  }
+
+  printf("Verifying values at 3 fixed indices are not unchanged...\n");
+
+  if (same == 0)
+  {
+      printf("Passed.\n");
+  }
+  else
+  {
+      printf("Failed.  Values unchanged after 10 attempts.\n");
+  }
+
+  return 0;
+
 }
-
-int main() {
-	int i;
-	int num_players = 2;
-	int player = 0;
-
-	// kingdom cards
-	int k[10] = {adventurer, council_room, feast, gardens, mine, remodel, smithy, village, baron, great_hall};
-	int seed = 2000;
-	struct gameState state;
-	int handCount;
-	int bonus = 1;
-
-	int coppers[MAX_HAND];
-	int silvers[MAX_HAND];
-	int golds[MAX_HAND];
-
-	// arrays of treasures
-	for (i = 0; i < MAX_HAND; i++) {
-		coppers[i] = copper;
-		silvers[i] = silver;
-		golds[i] = gold;
-	}
-
-	printf("Testing: updateCoins()");
-
-	// test the function updateCoins() to see how it handles treasures, different bonus and hand count
-	for(handCount = 0; handCount <= 5; handCount = handCount + 5) {
-		printf("\n\nTreasure cards: %d\n", handCount);
-		printf("Bonus: %d\n", bonus);
-
-		memset(&state,23,sizeof(struct gameState));
-		initializeGame(num_players, k, seed, &state);
-		state.handCount[player] = handCount;
-
-		// fill hand with copper
-		memcpy(state.hand[player],coppers,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Copper\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*1+bonus);
-
-		assertTrue(state.coins,handCount*1+bonus);
-
-		// fill hand with silver
-		memcpy(state.hand[player],silvers,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Silver\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*2+bonus);
-
-		assertTrue(state.coins, handCount*2+bonus);
-
-		// fill hand with gold
-		memcpy(state.hand[player],golds,sizeof(int)*handCount);
-		updateCoins(player,&state,bonus);
-
-		printf("\nCoin count: Gold\n");
-		printf("Actual: %d\n", state.coins);
-		printf("Expected: %d\n", handCount*3+bonus);
-
-		assertTrue(state.coins,handCount*3+bonus);
-
-		bonus = bonus + 2;
-	}
-
-	if(failure_count) {
-		printf("\nTest: Fail\n");
-		printf("Failures: %d\n", failure_count);
-	}
-	else {
-		printf("\nTest: Passed and Completed\n\n");
-	}
-
-	return 0;
-}
->>>>>>> 969d8ce8573046a341b0c60fe0fd421a65085b95

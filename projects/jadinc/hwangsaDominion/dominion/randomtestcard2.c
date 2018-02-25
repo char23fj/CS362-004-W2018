@@ -1,120 +1,129 @@
 #include "dominion.h"
 #include "dominion_helpers.h"
-#include "rngs.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "rngs.h"
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
 
-// fail counters
-int failc_effect = 0;
-int failc_draw = 0;
-int failc_discard = 0;
-int failc_deckhandcount = 0;
+#define MAX_FAILS 10
+#define MAX_HAND 15
+#define MAX_DECK 50
+#define SAMPLE_SIZE 50
 
-// function to test smithy card
-void test_smithy(int x, struct gameState *post) {
-	int fx, d1, d2, d3, discard;
-	int bonus = 0;
+int testCardEffect(struct gameState* G);
 
-	// manually act on function's actions
-	struct gameState pre;
+int main(int argc, char** argv) {
+  struct gameState G;
+  int k[10] = { adventurer, gardens, embargo, village, minion, mine, cutpurse,
+      sea_hag, tribute, smithy };
 
-	// copy game state to pre
-	memcpy(&pre, post, sizeof(struct gameState));
-	
-	// call card effect function with smithy card
-	fx = cardEffect(smithy, 0, 0, 0, post, 0, &bonus);
+  printf("\n-----Testing the steward card implementation.-----\n");
 
-	// call draw 3x
-	d1 = drawCard(x, &pre);
-	d2 = drawCard(x, &pre);
-	d3 = drawCard(x, &pre);
+  //initializeGame(2, k, 235, &G);
 
-	// call discard
-	discard = discardCard(0, x, &pre, 0);
+  int currentPlayer = G.whoseTurn;
 
-	// get hand/deck counts
-	int post_hand = post->handCount[x];
-	int post_deck = post->deckCount[x];
-	int pre_hand = pre.handCount[x];
-	int pre_deck = pre.deckCount[x];
+  int i, j, md, 
+      mh, hc,
+      fails = 0;
+  for (i = 0; i < SAMPLE_SIZE; i++)
+  {
+      md = rand() % MAX_DECK + 10;
 
-	// check draws
-	if (d1 == -1 && pre.deckCount[x] != 0) {
-		failc_draw++;
-	}
-	if (d2 == -1 && pre.deckCount[x] != 0) {
-		failc_draw++;
-	}
-	if (d3 == -1 && pre.deckCount[x] != 0) {
-		failc_draw++;
-	}
+      initializeGame(2, k, 235, &G);
 
-	// check card effect and discard 
-	if (!(fx == 0 && discard == 0)) {
-		if (fx) {
-			failc_effect++;
-		}
-		if (discard) {
-			failc_discard++;
-		}
-	}
+      G.deckCount[currentPlayer] = 0;
+      G.handCount[currentPlayer] = 0;
 
-	// check hand/deck counts
-	if (!(post_hand == pre_hand && post_deck == pre_deck)) {
-		failc_deckhandcount++;
-	}
+      for (j = 0; j < md; j++)
+      {
+          gainCard(rand() % 27, &G, 1, currentPlayer);
+      }
+
+      mh = rand() % MAX_HAND + 2;
+      for (j = 0; j < mh; j++)
+      {
+          if (G.deckCount[currentPlayer] > 0)
+          {
+              drawCard(currentPlayer, &G);
+          }
+      }
+
+      hc = G.handCount[currentPlayer];
+
+      fails += testCardEffect(&G);
+
+      if (fails >= MAX_FAILS)
+      {
+          printf("\nMaximum failure count reached.  Exiting.\n");
+          break;
+      }
+  }
+
+  if (fails == 0)
+  {
+      printf("\nTesting completed; no errors found.\n");
+  }
+
 }
 
-int main() {
-	printf("Random Test\n");
-	printf("randomcardtest2.c\n");
-	printf("smithyCard()\n\n");
+int testCardEffect(struct gameState* G)
+{
+  int currentPlayer = G->whoseTurn,
+      error = 0,
+      choice = rand() % 5 + 1,
+      card1,
+      card2;
 
-	int loop = 10000;
-	int i, j, player;
-	struct gameState test;
-	srand(time(NULL));
+  card1 = rand() % G->handCount[currentPlayer];
+  card2 = card1;
+  while (card2 == card1 && G->handCount[currentPlayer] > 1)
+  {
+      card2 = rand() % G->handCount[currentPlayer];
+  }
 
-	// randomly initialize game state
-	for (i = 0; i < loop; i++) {
-		for (j = 0; j < sizeof(struct gameState); j++) {
-			((char*)&test)[j] = floor(Random() * 256);
-		}
+  card1 = G->hand[currentPlayer][card1];
+  card2 = G->hand[currentPlayer][card2];
 
-		// randomly select vals
-		player = floor(Random() * MAX_PLAYERS);
-		test.deckCount[player] = floor(Random() * MAX_DECK);
-		test.discardCount[player] = floor(Random() * MAX_DECK);
-		test.handCount[player] = floor(Random() * MAX_HAND);
-		test.playedCardCount = floor(Random() * (MAX_DECK - 1));
-		test.whoseTurn = player;
+  gainCard(steward, G, 2, currentPlayer);
+  int hcount = G->handCount[currentPlayer],
+      dcount = G->deckCount[currentPlayer],
+      disc = G->discardCount[currentPlayer],
+      coins = G->coins;
 
-		// call test function
-		test_smithy(player, &test);
-	}
+  cardEffect(steward, choice, card1, card2, G, hcount - 1, 0);
 
-	int failc_total = failc_effect + failc_draw + failc_discard + failc_deckhandcount;
+  if (choice == 1 && G->deckCount[currentPlayer] != dcount + 2)
+  {
+      printf("Error:  2 cards not drawn with choice variable set to 1.\n");
+      error = 1;
+  }
 
-	printf("\nTest Results:\n");
-	printf("Passed Tests: %d\n", loop - failc_total);
-	printf("Failed Tests: %d\n", failc_total);
+  if (choice == 2 && G->coins != coins + 2)
+  {
+      printf("Error:  2 coins not added with choice variable set to 2.\n");
+      error = 1;
+  }
 
-	if (failc_total == 0) {
-		printf("Random Test Successfully Passed\n\n");
-	}
-	else {
-		printf("\nRandom Test Failed\n");
-		printf("cardEffect() failed: %d\n", failc_effect);
-		printf("drawCard() failed: %d\n", failc_draw);
-		printf("discardCard() failed %d\n", failc_discard);
-		printf("Hand/Deck count mismatch: %d\n\n", failc_deckhandcount);
-	}
-	
-	printf("Coverage\n");
+  if (choice != 1 && choice != 2)
+  {
+      if (G->discardCount[currentPlayer] < disc + 2)
+      {
+          printf("Error:  2 cards not discarded with choice variable > 2.\n");
+          error = 1;
+      }
 
-	return 0;
+      disc = G->discardCount[currentPlayer];
+      if (G->discard[currentPlayer][disc-1] != card1 ||
+          G->discard[currentPlayer][disc-2] != card2)
+      {
+          printf("Error:  Discarded cards do not match passed arguments.\n");
+          error = 1;
+      }
+  }
+
+
+  return error;
+
 }
