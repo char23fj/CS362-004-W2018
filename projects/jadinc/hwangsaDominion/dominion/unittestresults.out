@@ -1,0 +1,311 @@
+
+-----Testing the treasure map card implementation.-----
+
+Discarding any treasure map cards in hand (start with none).
+
+Added one treasure map. 
+Handcount: 6
+Deckcount: 5
+
+After playing treasure map (only 1 in hand):
+Handcount: 6  (Expected: 6)
+Deckcount: 5  (Expected: 5)
+
+Verifying no treasure map cards have been played/discarded...
+Passed.
+
+Verifying no gold added to deck...
+Passed.
+
+Added another treasure map.
+After playing treasure map (with 2nd in hand):
+Handcount: 5  (Expected: 5)
+Deckcount: 9  (Expected: 9)
+
+Verifying two treasure map cards have been discarded...
+Passed.
+
+Verifying four gold cards added at the end of the deck...
+Passed.
+
+-----Testing the smithy card implementation.-----
+
+Adding one smithy. 
+Handcount: 6
+Deckcount: 5
+
+After playing smithy:
+Handcount: 9  (Expected: 8)
+Deckcount: 1  (Expected: 5)
+
+Verifying 3 cards gained and 1 discarded...
+Failed.  Hand count inconsistent.
+
+Verifying card discarded into played card pile...
+Passed.
+
+-----Testing the adventurer card implementation.-----
+
+Before playing adventurer:
+Handcount: 5
+Deckcount: 10
+Discardcount: 0
+Top 5 cards in deck (most recently added first) are copper, baron, minion, silver, gold.
+
+After playing adventurer:
+Handcount: 8  (Expected: 6)
+Discardcount: 2  (Expected: 2)
+Deckcount: 5  (Expected: 6)
+Error: Hand count should reflect two additions, minus the discarded adventurer card.
+Error: Deck should have been reduced by four from drawing four cards.
+
+Verifying top two cards of hand are a copper and a silver...
+Failed.  Top two are not 1 copper and 1 silver.
+
+Verifying baron and minion discarded into discard pile...
+Failed.  Discard does not show 1 baron and 1 minion.
+
+-----Testing the sea hag card implementation.-----
+
+Before playing sea hag:
+Deckcount: 10
+Discardcount: 0
+
+After playing sea hag:
+Discardcount: 1  (Expected: 1)
+Deckcount: 7  (Expected: 10)
+
+Verifying top of opponent's deck is a curse card...
+Failed.  Top card is not a curse.
+
+Verifying top of opponent's discard pile is the same that was at the top of that player's deck before sea hag was played...
+Failed.  Cards do not match.
+
+-----Testing the isGameOver function implementation.-----
+
+Case 1:  Province supply is empty.  Result:
+Pass.  Game over.
+
+Case 2:  3 supply piles empty, province at 1.  Result:
+Pass.  Game over.
+
+Case 1:  No empty supply piles.  Result:
+Pass.  Game continues.
+
+-----Testing the gainCard function implementation.-----
+
+Before calling gainCard:
+Handcount: 5
+Deckcount: 5
+Discard count: 5
+
+Now calling gainCard (gold) once each for hand/deck/discard with no gold 
+in supply pile...
+
+Verifying no cards have been added to hand...
+Passed.
+
+Verifying no cards have been added to deck...
+Passed.
+
+Verifying no cards have been discarded...
+Passed.
+
+Increasing gold supply to 3 and calling once each for hand/deck/discard...
+
+Verifying 1 card has been added to hand...
+Passed.
+
+Verifying 1 card has been added to deck...
+Passed.
+
+Verifying 1 card has been discarded...
+Passed.
+
+-----Testing the shuffle function implementation.-----
+
+Attempting to shuffle an empty deck (deckCount: 0).
+Verifying return value of -1...
+Passed.
+
+Shuffling the other player's deck (deckCount: 5).
+Verifying deck count has not changed...
+Passed.
+Verifying values at 3 fixed indices are not unchanged...
+Passed.
+
+-----Testing the discardCard function implementation.-----
+
+Before calling discardCard:
+Handcount: 5
+Discard count: 0
+Played card count: 0
+
+Calling discardCard at index 0, with 0 for played cards flag.
+
+Verifying card removed from hand...
+Passed.
+
+Verifying 1 card has been added to discard pile...
+Failed.  1 card(s) should have been removed.
+
+Verifying 1 card has been added to playedCards...
+Passed.
+
+Verifying last card has been moved to zero index...
+Passed.
+
+Calling discardCard at highest index, with 1 for played cards flag.
+
+Verifying card has not been added to playedCards...
+Passed.
+
+Removing all cards from player's hand.
+Hand count: 0.
+Verifying number of cards removed equals number of cards before removal..
+Passed.
+Attempting to remove an additional card with empty hand...
+Hand count: -1.
+Action succeeded, indicating possible design flaw.
+Function 'updateCoins'
+Lines executed:81.82% of 11
+No branches
+No calls
+
+Function 'gainCard'
+Lines executed:100.00% of 13
+No branches
+No calls
+
+Function 'discardCard'
+Lines executed:100.00% of 13
+No branches
+No calls
+
+Function 'cardEffect'
+Lines executed:15.46% of 207
+No branches
+No calls
+
+Function 'steward_rf'
+Lines executed:100.00% of 10
+No branches
+No calls
+
+Function 'village_rf'
+Lines executed:0.00% of 5
+No branches
+No calls
+
+Function 'council_room_rf'
+Lines executed:0.00% of 9
+No branches
+No calls
+
+Function 'smithy_rf'
+Lines executed:100.00% of 5
+No branches
+No calls
+
+Function 'adventurer_rf'
+Lines executed:100.00% of 16
+No branches
+No calls
+
+Function 'getCost'
+Lines executed:0.00% of 30
+No branches
+No calls
+
+Function 'drawCard'
+Lines executed:77.27% of 22
+No branches
+No calls
+
+Function 'getWinners'
+Lines executed:0.00% of 24
+No branches
+No calls
+
+Function 'scoreFor'
+Lines executed:0.00% of 24
+No branches
+No calls
+
+Function 'isGameOver'
+Lines executed:100.00% of 10
+No branches
+No calls
+
+Function 'endTurn'
+Lines executed:0.00% of 20
+No branches
+No calls
+
+Function 'whoseTurn'
+Lines executed:100.00% of 2
+No branches
+No calls
+
+Function 'fullDeckCount'
+Lines executed:0.00% of 9
+No branches
+No calls
+
+Function 'supplyCount'
+Lines executed:100.00% of 2
+No branches
+No calls
+
+Function 'handCard'
+Lines executed:0.00% of 3
+No branches
+No calls
+
+Function 'numHandCards'
+Lines executed:0.00% of 2
+No branches
+No calls
+
+Function 'buyCard'
+Lines executed:0.00% of 13
+No branches
+No calls
+
+Function 'playCard'
+Lines executed:0.00% of 14
+No branches
+No calls
+
+Function 'shuffle'
+Lines executed:100.00% of 16
+No branches
+No calls
+
+Function 'initializeGame'
+Lines executed:83.87% of 62
+No branches
+No calls
+
+Function 'kingdomCards'
+Lines executed:0.00% of 13
+No branches
+No calls
+
+Function 'newGame'
+Lines executed:0.00% of 3
+No branches
+No calls
+
+Function 'compare'
+Lines executed:83.33% of 6
+No branches
+No calls
+
+File 'dominion.c'
+Lines executed:35.99% of 564
+Branches executed:34.62% of 416
+Taken at least once:27.40% of 416
+Calls executed:26.32% of 95
+Creating 'dominion.c.gcov'
+
