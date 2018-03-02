@@ -73,13 +73,13 @@ Discardcount: 0
 
 After playing sea hag:
 Discardcount: 1  (Expected: 1)
-Deckcount: 7  (Expected: 10)
+Deckcount: 10  (Expected: 10)
 
 Verifying top of opponent's deck is a curse card...
-Failed.  Top card is not a curse.
+Passed.
 
 Verifying top of opponent's discard pile is the same that was at the top of that player's deck before sea hag was played...
-Failed.  Cards do not match.
+Passed.
 
 -----Testing the isGameOver function implementation.-----
 
@@ -178,17 +178,17 @@ No branches
 No calls
 
 Function 'discardCard'
-Lines executed:100.00% of 13
+Lines executed:92.31% of 13
 No branches
 No calls
 
 Function 'cardEffect'
-Lines executed:15.46% of 207
+Lines executed:14.49% of 207
 No branches
 No calls
 
 Function 'steward_rf'
-Lines executed:100.00% of 10
+Lines executed:0.00% of 10
 No branches
 No calls
 
@@ -208,7 +208,7 @@ No branches
 No calls
 
 Function 'adventurer_rf'
-Lines executed:100.00% of 16
+Lines executed:93.75% of 16
 No branches
 No calls
 
@@ -218,7 +218,7 @@ No branches
 No calls
 
 Function 'drawCard'
-Lines executed:77.27% of 22
+Lines executed:36.36% of 22
 No branches
 No calls
 
@@ -303,9 +303,9 @@ No branches
 No calls
 
 File 'dominion.c'
-Lines executed:35.99% of 564
-Branches executed:34.62% of 416
-Taken at least once:27.40% of 416
-Calls executed:26.32% of 95
+Lines executed:31.91% of 564
+Branches executed:32.69% of 416
+Taken at least once:25.00% of 416
+Calls executed:17.89% of 95
 Creating 'dominion.c.gcov'
 

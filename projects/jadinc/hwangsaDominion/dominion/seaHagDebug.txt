@@ -1,0 +1,129 @@
+----------------------------------------------------------------------------------
+Results before the bug fix:
+----------------------------------------------------------------------------------
+
+-----Testing the sea hag card implementation.-----
+
+Before playing sea hag:
+Deckcount: 10
+Discardcount: 0
+
+Breakpoint 1, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:749
+749       int currentPlayer = whoseTurn(state);
+(gdb) print state->deckCount[1]
+$12 = 10
+(gdb) continue
+Continuing.
+
+Breakpoint 2, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1209
+1209          for (i = 0; i < state->numPlayers; i++){
+(gdb) print state->deckCount[1]
+$13 = 10
+(gdb) continue
+Continuing.
+[New Thread 16180.0x4828]
+
+Breakpoint 4, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1210
+1210            if (i != currentPlayer){
+(gdb) print state->deckCount[1]
+$14 = 10
+(gdb) continue
+Continuing.
+
+Breakpoint 4, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1210
+1210            if (i != currentPlayer){
+(gdb) print state->deckCount[1]
+$15 = 10
+(gdb) continue
+Continuing.
+
+Breakpoint 5, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1211
+1211              state->discard[i][state->discardCount[i]] = state->deck[i][state->deckCount[i]--];
+(gdb) print state->deckCount[1]
+$16 = 10
+(gdb) continue
+Continuing.
+
+Breakpoint 6, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1212
+1212              state->deckCount[i]--;
+(gdb) print state->deckCount[1]
+$17 = 8
+(gdb) continue
+Continuing.
+
+Breakpoint 7, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1213
+1213              state->discardCount[i]++;
+(gdb) print state->deckCount[1]
+$18 = 8
+(gdb) continue
+Continuing.
+
+Breakpoint 8, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1216
+1216          }
+(gdb) print state->deckCount[1]
+$19 = 7
+(gdb) continue
+Continuing.
+
+After playing sea hag:
+Discardcount: 1  (Expected: 1)
+Deckcount: 7  (Expected: 10)
+
+Verifying top of opponent's deck is a curse card...
+Failed.  Top card is not a curse.
+
+Verifying top of opponent's discard pile is the same that was at the top of that player's deck before sea hag was played...
+Failed.  Cards do not match.
+
+----------------------------------------------------------------------------------
+Results after fixing the bug:
+----------------------------------------------------------------------------------
+
+-----Testing the sea hag card implementation.-----
+
+Before playing sea hag:
+Deckcount: 10
+Discardcount: 0
+
+Breakpoint 1, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1211
+1211              state->discard[i][state->discardCount[i]] = state->deck[i][state->deckCount[i]-1];
+(gdb) print state->deckCount[i]
+$1 = 10
+(gdb) continue
+Continuing.
+
+Breakpoint 2, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1212
+1212              state->discardCount[i]++;
+(gdb) print state->deckCount[i]
+$2 = 10
+(gdb) continue
+Continuing.
+[New Thread 5848.0x2a70]
+
+Breakpoint 3, cardEffect (card=25, choice1=0, choice2=0, choice3=0,
+    state=0xffff64b0, handPos=0, bonus=0xffff647c) at dominion.c:1213
+1213              state->deck[i][state->deckCount[i]-1] = curse;//Top card now a curse
+(gdb) print state->deckCount[i]
+$3 = 10
+(gdb) continue
+Continuing.
+
+After playing sea hag:
+Discardcount: 1  (Expected: 1)
+Deckcount: 10  (Expected: 10)
+
+Verifying top of opponent's deck is a curse card...
+Passed.
+
+Verifying top of opponent's discard pile is the same that was at the top of that player's deck before sea hag was played...
+Passed.

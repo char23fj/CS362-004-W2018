@@ -36,7 +36,7 @@ No branches
 No calls
 
 Function 'gainCard'
-Lines executed:84.62% of 13
+Lines executed:100.00% of 13
 No branches
 No calls
 
@@ -46,7 +46,7 @@ No branches
 No calls
 
 Function 'cardEffect'
-Lines executed:12.56% of 207
+Lines executed:15.46% of 207
 No branches
 No calls
 
@@ -96,7 +96,7 @@ No branches
 No calls
 
 Function 'isGameOver'
-Lines executed:0.00% of 10
+Lines executed:100.00% of 10
 No branches
 No calls
 
@@ -166,9 +166,9 @@ No branches
 No calls
 
 File 'dominion.c'
-Lines executed:32.80% of 564
-Branches executed:31.73% of 416
-Taken at least once:24.04% of 416
+Lines executed:35.99% of 564
+Branches executed:34.62% of 416
+Taken at least once:27.40% of 416
 Calls executed:26.32% of 95
 Creating 'dominion.c.gcov'
 
